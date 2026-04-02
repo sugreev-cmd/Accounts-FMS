@@ -1,14 +1,25 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Astoria Living — Compliance FMS</title>
+<title>Compliance FMS</title>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
-:root{
+/* ══ THEME VARIABLES ══ */
+[data-theme="dark"]{
   --bg:#07090F;--sf:#0D1117;--s2:#131820;--s3:#181F2A;--s4:#1E2736;
   --bd:#1F2D42;--bd2:#2A3D58;
+  --text:#E8F0FE;--sub:#7A90B0;--dim:#3A5070;
+  --card-bg:#0D1117;--table-head:#131820;
+}
+[data-theme="light"]{
+  --bg:#F0F4F8;--sf:#FFFFFF;--s2:#F8FAFB;--s3:#EEF2F6;--s4:#E4EBF0;
+  --bd:#D0DAE8;--bd2:#B0C0D8;
+  --text:#1A2540;--sub:#4A5F80;--dim:#8FA0BE;
+  --card-bg:#FFFFFF;--table-head:#F0F4F8;
+}
+:root{
   --cyan:#00D4FF;--cyan2:rgba(0,212,255,.12);
   --gold:#FFB800;--gold2:rgba(255,184,0,.12);
   --green:#00E676;--green2:rgba(0,230,118,.1);
@@ -17,16 +28,94 @@
   --orange:#FF8C42;--orange2:rgba(255,140,66,.1);
   --blue:#4488FF;--blue2:rgba(68,136,255,.1);
   --teal:#00BFA5;--teal2:rgba(0,191,165,.1);
-  --text:#E8F0FE;--sub:#7A90B0;--dim:#3A5070;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:13px}
+html,body{height:100%;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:13px;transition:background .25s,color .25s}
 ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-thumb{background:var(--bd2);border-radius:2px}
 input,select,textarea,button{font-family:'DM Sans',sans-serif}
 .page{display:none}.page.active{display:flex}
 
-/* LOGIN */
-#loginPage{align-items:center;justify-content:center;min-height:100vh;width:100%;background:radial-gradient(ellipse 80% 60% at 20% 10%,rgba(0,212,255,.06),transparent 60%),radial-gradient(ellipse 60% 80% at 80% 90%,rgba(176,96,255,.04),transparent 60%),var(--bg);}
+/* ══ THEME TOGGLE ══ */
+.theme-toggle{
+  width:44px;height:24px;border-radius:12px;background:var(--s3);border:1px solid var(--bd);
+  cursor:pointer;position:relative;transition:all .25s;flex-shrink:0;
+}
+.theme-toggle::before{
+  content:'';position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;
+  background:var(--cyan);transition:transform .25s,background .25s;
+}
+[data-theme="light"] .theme-toggle::before{transform:translateX(20px);background:var(--gold);}
+.theme-icons{position:absolute;inset:0;display:flex;align-items:center;justify-content:space-between;padding:0 5px;pointer-events:none;font-size:9px;}
+
+/* ══ SETTINGS BUTTON ══ */
+.settings-btn{
+  width:30px;height:30px;border-radius:8px;border:1px solid var(--bd);
+  background:none;color:var(--sub);font-size:15px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .2s;
+}
+.settings-btn:hover{border-color:var(--cyan);color:var(--cyan)}
+
+/* ══ SETTINGS PANEL (slide-in) ══ */
+.settings-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:500;
+  backdrop-filter:blur(6px);
+}
+.settings-overlay.open{display:flex;align-items:flex-start;justify-content:flex-end}
+.settings-panel{
+  width:340px;height:100vh;background:var(--sf);border-left:1px solid var(--bd);
+  padding:0;overflow-y:auto;animation:slideIn .25s ease;
+}
+@keyframes slideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
+.sp-header{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 20px;border-bottom:1px solid var(--bd);background:var(--s3);
+  position:sticky;top:0;z-index:2;
+}
+.sp-title{font-family:'Rajdhani',sans-serif;font-size:16px;font-weight:700;color:var(--cyan);letter-spacing:1px;}
+.sp-body{padding:20px}
+.sp-section{margin-bottom:24px}
+.sp-section-label{
+  font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:2px;
+  color:var(--dim);text-transform:uppercase;margin-bottom:12px;
+}
+.sp-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 14px;background:var(--s3);border:1px solid var(--bd);
+  border-radius:10px;margin-bottom:8px;gap:10px;
+}
+.sp-row-label{font-size:12px;color:var(--sub);font-weight:500}
+.sp-input{
+  flex:1;background:var(--s3);border:1.5px solid var(--bd);border-radius:8px;
+  color:var(--text);font-size:12px;padding:8px 10px;outline:none;transition:all .2s;
+}
+.sp-input:focus{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(0,212,255,.08)}
+.sp-save-btn{
+  width:100%;padding:11px;background:linear-gradient(135deg,rgba(0,212,255,.2),rgba(0,212,255,.1));
+  border:1px solid rgba(0,212,255,.4);border-radius:9px;color:var(--cyan);
+  font-size:12px;font-weight:700;letter-spacing:.5px;cursor:pointer;margin-top:8px;
+}
+.sp-save-btn:hover{box-shadow:0 0 20px rgba(0,212,255,.2)}
+.sp-reset{
+  width:100%;padding:9px;background:none;border:1.5px solid var(--bd);
+  border-radius:9px;color:var(--dim);font-size:11px;cursor:pointer;margin-top:6px;
+}
+.sp-reset:hover{border-color:var(--red);color:var(--red)}
+
+/* Theme switch row */
+.theme-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 14px;background:var(--s3);border:1px solid var(--bd);border-radius:10px;margin-bottom:8px;
+}
+.theme-row-label{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--sub);font-weight:500}
+.theme-indicator{
+  font-size:11px;color:var(--dim);font-family:'JetBrains Mono',monospace;
+  background:var(--s2);border:1px solid var(--bd);padding:3px 8px;border-radius:5px;
+}
+
+/* ══ LOGIN ══ */
+#loginPage{align-items:center;justify-content:center;min-height:100vh;width:100%;
+  background:radial-gradient(ellipse 80% 60% at 20% 10%,rgba(0,212,255,.06),transparent 60%),
+  radial-gradient(ellipse 60% 80% at 80% 90%,rgba(176,96,255,.04),transparent 60%),var(--bg);}
 .lcard{background:linear-gradient(160deg,var(--s2),var(--sf));border:1px solid var(--bd);border-radius:16px;width:420px;padding:40px 32px 32px;position:relative;z-index:1;box-shadow:0 40px 80px rgba(0,0,0,.6);animation:cardIn .4s ease both;}
 @keyframes cardIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 .lcard::before{content:'';position:absolute;top:0;left:15%;right:15%;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:.5;}
@@ -35,6 +124,7 @@ input,select,textarea,button{font-family:'DM Sans',sans-serif}
 .l-brand-name{font-family:'Rajdhani',sans-serif;font-size:22px;font-weight:700;letter-spacing:2px;color:var(--text);}
 .l-brand-name span{color:var(--cyan)}
 .l-brand-sub{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--dim);margin-top:4px;text-transform:uppercase;}
+.l-theme-row{display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:16px;font-size:10px;color:var(--dim);}
 .l-roles-label{font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--dim);text-transform:uppercase;margin-bottom:10px;}
 .l-roles{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:20px}
 .l-role-btn{background:var(--s3);border:1.5px solid var(--bd);border-radius:9px;padding:12px 10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;transition:all .2s;position:relative;}
@@ -57,7 +147,7 @@ input,select,textarea,button{font-family:'DM Sans',sans-serif}
 .l-err{text-align:center;font-size:11px;color:var(--red);margin-top:10px;min-height:16px}
 .l-foot{text-align:center;margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--dim);letter-spacing:1px;text-transform:uppercase}
 
-/* APP */
+/* ══ APP ══ */
 #appPage{flex-direction:column;height:100vh;overflow:hidden}
 .topbar{display:flex;align-items:center;justify-content:space-between;padding:0 22px;height:54px;background:var(--sf);border-bottom:1px solid var(--bd);flex-shrink:0;z-index:100;position:relative;}
 .topbar::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:.2;}
@@ -81,7 +171,7 @@ input,select,textarea,button{font-family:'DM Sans',sans-serif}
 .app-body{flex:1;overflow:hidden;position:relative}
 .view{display:none;height:100%;overflow-y:auto}.view.active{display:block}
 
-/* KPI */
+/* ══ KPI ══ */
 .kpi-row{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:18px}
 .kpi{background:var(--s2);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;position:relative;overflow:hidden;transition:all .2s;}
 .kpi:hover{border-color:var(--bd2);transform:translateY(-2px)}.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
@@ -91,7 +181,7 @@ input,select,textarea,button{font-family:'DM Sans',sans-serif}
 .kk0 .kpi-val{color:var(--cyan)}.kk1 .kpi-val{color:var(--green)}.kk2 .kpi-val{color:var(--red)}.kk3 .kpi-val{color:var(--gold)}.kk4 .kpi-val{color:var(--purple)}.kk5 .kpi-val{color:var(--orange)}
 .kpi-sub{font-size:10px;color:var(--dim)}
 
-/* SECTION CARDS */
+/* ══ SECTION CARDS ══ */
 .sec-wrap{padding:18px 22px}
 .sec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px}
 .sec-title{font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;letter-spacing:.5px}
@@ -104,9 +194,9 @@ input,select,textarea,button{font-family:'DM Sans',sans-serif}
 .srch-box:focus-within{border-color:var(--cyan)}
 .srch-box input{background:none;border:none;outline:none;color:var(--text);font-size:11px;width:160px}
 
-/* TASK TABLE */
+/* ══ TASK TABLE ══ */
 .task-table{width:100%;border-collapse:collapse;min-width:900px}
-.task-table thead th{background:var(--s2);padding:9px 14px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;color:var(--dim);border-bottom:1px solid var(--bd);white-space:nowrap;}
+.task-table thead th{background:var(--table-head);padding:9px 14px;text-align:left;font-family:'JetBrains Mono',monospace;font-size:8px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;color:var(--dim);border-bottom:1px solid var(--bd);white-space:nowrap;}
 .task-table tbody tr{border-bottom:1px solid rgba(31,45,66,.5);cursor:pointer;transition:background .12s;}
 .task-table tbody tr:hover{background:rgba(0,212,255,.03)}
 .task-table td{padding:10px 14px;vertical-align:middle}
@@ -123,12 +213,12 @@ input,select,textarea,button{font-family:'DM Sans',sans-serif}
 @keyframes pulse-red{0%,100%{box-shadow:none}50%{box-shadow:0 0 8px rgba(255,68,68,.3)}}
 .freq-badge{padding:2px 7px;border-radius:4px;font-size:8px;font-weight:700;letter-spacing:.5px;font-family:'JetBrains Mono',monospace;}
 .fb-m{background:rgba(0,212,255,.08);color:var(--cyan)}.fb-q{background:rgba(176,96,255,.08);color:var(--purple)}.fb-a{background:rgba(255,140,66,.08);color:var(--orange)}
-.tw-wrap{background:var(--s2);border:1px solid var(--bd);border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.2)}
+.tw-wrap{background:var(--s2);border:1px solid var(--bd);border-radius:12px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,.1)}
 .tw-scroll{overflow-x:auto}
 .add-row-btn{width:100%;padding:10px;background:none;border:none;border-top:1px solid var(--bd);color:var(--dim);font-size:11px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px;}
 .add-row-btn:hover{background:rgba(0,212,255,.04);color:var(--cyan)}
 
-/* MIS */
+/* ══ MIS ══ */
 .mis-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
 .mis-card{background:var(--s2);border:1px solid var(--bd);border-radius:12px;padding:16px;position:relative;overflow:hidden;}
 .mis-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
@@ -139,7 +229,7 @@ input,select,textarea,button{font-family:'DM Sans',sans-serif}
 .mis-sub{font-size:10px;color:var(--dim)}
 .week-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:18px}
 .week-card{background:var(--s2);border:1px solid var(--bd);border-radius:10px;padding:12px;transition:all .2s;cursor:pointer;}
-.week-card:hover{border-color:var(--cyan)}.week-card.active-wk{border-color:var(--cyan);background:rgba(0,212,255,.04)}
+.week-card:hover{border-color:var(--cyan)}
 .wk-label{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--cyan);margin-bottom:8px;letter-spacing:1px}
 .wk-bar-wrap{display:flex;flex-direction:column;gap:4px}
 .wk-bar-row{display:flex;align-items:center;gap:6px}
@@ -156,9 +246,9 @@ input,select,textarea,button{font-family:'DM Sans',sans-serif}
 .sc-nums{display:flex;gap:8px;font-size:10px;min-width:100px;justify-content:flex-end}
 .sc-n{display:flex;align-items:center;gap:3px}
 
-/* MODAL */
+/* ══ MODAL ══ */
 .mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:300;align-items:center;justify-content:center;backdrop-filter:blur(6px)}.mo.open{display:flex}
-.md{background:var(--s2);border:1px solid var(--bd);border-radius:14px;width:600px;max-width:96vw;max-height:92vh;overflow-y:auto;animation:mIn .22s ease;box-shadow:0 40px 80px rgba(0,0,0,.6);}
+.md{background:var(--s2);border:1px solid var(--bd);border-radius:14px;width:600px;max-width:96vw;max-height:92vh;overflow-y:auto;animation:mIn .22s ease;box-shadow:0 40px 80px rgba(0,0,0,.4);}
 @keyframes mIn{from{opacity:0;transform:translateY(12px) scale(.97)}to{opacity:1;transform:none}}
 .mh{display:flex;align-items:center;justify-content:space-between;padding:16px 20px 14px;border-bottom:1px solid var(--bd);position:sticky;top:0;background:var(--s2);z-index:5;border-radius:14px 14px 0 0;}
 .mh::after{content:'';position:absolute;bottom:0;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:.2;}
@@ -175,7 +265,7 @@ input,select,textarea,button{font-family:'DM Sans',sans-serif}
 .bp{padding:9px 18px;background:linear-gradient(135deg,rgba(0,212,255,.2),rgba(0,212,255,.1));border:1px solid rgba(0,212,255,.4);border-radius:8px;color:var(--cyan);font-size:12px;font-weight:700;cursor:pointer;transition:all .2s;}
 .bp:hover{box-shadow:0 0 16px rgba(0,212,255,.2)}
 .bs{padding:9px 14px;border:1.5px solid var(--bd);background:none;border-radius:8px;color:var(--sub);font-size:12px;cursor:pointer;}
-.bd2{padding:9px 14px;border:1.5px solid rgba(255,68,68,.3);background:var(--red2);border-radius:8px;color:var(--red);font-size:12px;cursor:pointer;}
+.bd2b{padding:9px 14px;border:1.5px solid rgba(255,68,68,.3);background:var(--red2);border-radius:8px;color:var(--red);font-size:12px;cursor:pointer;}
 .task-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
 .tdg-item{background:var(--s3);border:1px solid var(--bd);border-radius:8px;padding:10px 12px}
 .tdg-lbl{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
@@ -184,29 +274,38 @@ input,select,textarea,button{font-family:'DM Sans',sans-serif}
 .notes-lbl{font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
 .notes-inp{width:100%;background:none;border:none;outline:none;color:var(--text);font-size:12px;resize:none;min-height:60px;font-family:'DM Sans',sans-serif;}
 
-/* SYNC/TOAST */
+/* ══ SYNC / TOAST ══ */
 .sync-dot{position:fixed;bottom:14px;right:14px;z-index:400;padding:5px 11px;border-radius:20px;font-size:9px;font-weight:600;display:flex;align-items:center;gap:5px;transition:all .25s;font-family:'JetBrains Mono',monospace;}
 .sync-dot.saved{background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.25);color:var(--green)}.sync-dot.saving{background:var(--gold2);border:1px solid rgba(255,184,0,.3);color:var(--gold)}.sync-dot.err{background:var(--red2);border:1px solid rgba(255,68,68,.3);color:var(--red)}
 .sd{width:5px;height:5px;border-radius:50%;background:currentColor;animation:blink .8s ease infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
 .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--s2);border:1px solid var(--bd);border-radius:9px;padding:10px 18px;font-size:11px;z-index:999;opacity:0;transition:all .28s;white-space:nowrap;color:var(--text);box-shadow:0 8px 24px rgba(0,0,0,.4);}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}.toast.s{border-left:3px solid var(--green)}.toast.e{border-left:3px solid var(--red)}.toast.i{border-left:3px solid var(--cyan)}
-.empty-state{text-align:center;padding:60px 20px;}
-.empty-icon{font-size:40px;opacity:.2;margin-bottom:12px}
-.empty-txt{font-size:13px;color:var(--dim)}
+
 @media(max-width:1100px){.kpi-row{grid-template-columns:repeat(3,1fr)}.mis-grid{grid-template-columns:repeat(2,1fr)}.week-grid{grid-template-columns:repeat(3,1fr)}}
 </style>
 </head>
 <body>
 
-<!-- LOGIN -->
+<!-- ═══════════════════════ LOGIN PAGE ═══════════════════════ -->
 <div id="loginPage" class="page active">
   <div class="lcard">
     <div class="l-brand">
       <div class="l-brand-logo">📊</div>
-      <div class="l-brand-name">ASTORIA <span>LIVING</span></div>
-      <div class="l-brand-sub">Compliance & Accounts FMS</div>
+      <div class="l-brand-name" id="loginBrandName">ASTORIA <span>LIVING</span></div>
+      <div class="l-brand-sub" id="loginBrandSub">Compliance &amp; Accounts FMS</div>
     </div>
+
+    <!-- Theme toggle on login screen -->
+    <div class="l-theme-row">
+      <span>🌙</span>
+      <button class="theme-toggle" id="loginThemeBtn" title="Toggle dark/light mode">
+        <div class="theme-icons"><span>🌙</span><span>☀️</span></div>
+      </button>
+      <span>☀️</span>
+      <span style="margin-left:4px;font-family:'JetBrains Mono',monospace;font-size:9px" id="loginThemeLabel">Dark Mode</span>
+    </div>
+
     <div class="l-roles-label">Select Role</div>
     <div class="l-roles">
       <button class="l-role-btn" type="button" onclick="pickRole('owner',this)"><div class="l-role-chk">✓</div><div class="l-role-icon">👑</div><div class="l-role-name">Owner / MD</div></button>
@@ -221,14 +320,17 @@ input,select,textarea,button{font-family:'DM Sans',sans-serif}
     </div>
     <button class="l-btn" id="enterBtn">ENTER SYSTEM →</button>
     <div class="l-err" id="lErr"></div>
-    <div class="l-foot">Astoria Living · Compliance FMS · Confidential</div>
+    <div class="l-foot" id="loginFoot">Compliance FMS · Confidential</div>
   </div>
 </div>
 
-<!-- APP -->
+<!-- ═══════════════════════ APP PAGE ═══════════════════════ -->
 <div id="appPage" class="page" style="flex-direction:column">
   <div class="topbar">
-    <div class="tb-brand"><div class="tb-logo">📊</div><div class="tb-name">ASTORIA <span>LIVING</span><small>COMPLIANCE & ACCOUNTS FMS</small></div></div>
+    <div class="tb-brand">
+      <div class="tb-logo">📊</div>
+      <div class="tb-name" id="topbarName">ASTORIA <span>LIVING</span><small id="topbarSub">COMPLIANCE &amp; ACCOUNTS FMS</small></div>
+    </div>
     <div class="tb-nav">
       <div class="tb-ni active" id="nav-dash">📊 Dashboard</div>
       <div class="tb-ni" id="nav-tasks">✅ Tasks</div>
@@ -238,6 +340,10 @@ input,select,textarea,button{font-family:'DM Sans',sans-serif}
       <div class="tb-pill tp-alert" id="overduePill">⚠ 0 Overdue</div>
       <div class="tb-pill tp-month" id="monthPill">📅 Apr 2026</div>
       <div class="tb-pill tp-role" id="rolePill">👑 Owner</div>
+      <button class="settings-btn" id="settingsBtn" title="Settings">⚙️</button>
+      <button class="theme-toggle" id="appThemeBtn" title="Toggle dark/light mode" style="width:44px;height:24px">
+        <div class="theme-icons"><span>🌙</span><span>☀️</span></div>
+      </button>
       <button class="tb-add-btn" id="addTaskBtn">+ Add Task</button>
       <button class="tb-logout" id="logoutBtn">Logout</button>
     </div>
@@ -255,14 +361,10 @@ input,select,textarea,button{font-family:'DM Sans',sans-serif}
           <div class="kpi kk4"><div class="kpi-lbl">Due Today</div><div class="kpi-val" id="dk4">0</div><div class="kpi-sub">Act now!</div></div>
           <div class="kpi kk5"><div class="kpi-lbl">Completion %</div><div class="kpi-val" id="dk5">0%</div><div class="kpi-sub">This month</div></div>
         </div>
-
-        <!-- Section wise progress -->
         <div class="sec-chart">
           <div class="sc-hdr">Section-wise Progress — <span id="dashMonthLabel" style="color:var(--cyan)"></span></div>
           <div id="sectionChart"></div>
         </div>
-
-        <!-- This month overdue list -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">
           <div style="background:var(--s2);border:1px solid var(--bd);border-radius:12px;overflow:hidden">
             <div style="padding:10px 14px;background:var(--s3);border-bottom:1px solid var(--bd);font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1.5px;color:var(--red);text-transform:uppercase">⚠ Overdue Tasks</div>
@@ -273,8 +375,6 @@ input,select,textarea,button{font-family:'DM Sans',sans-serif}
             <div style="padding:12px" id="dueSoonList"></div>
           </div>
         </div>
-
-        <!-- All tasks mini table -->
         <div class="tw-wrap">
           <div style="padding:10px 14px;background:var(--s3);border-bottom:1px solid var(--bd);font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1.5px;color:var(--sub);text-transform:uppercase">📋 All Tasks This Month</div>
           <div class="tw-scroll">
@@ -322,22 +422,13 @@ input,select,textarea,button{font-family:'DM Sans',sans-serif}
       <div class="sec-wrap">
         <div class="sec-hdr">
           <div class="sec-title" style="color:var(--cyan)">📈 MIS Report</div>
-          <div class="sec-filters">
-            <select class="month-sel" id="misMonthSel"></select>
-          </div>
+          <div class="sec-filters"><select class="month-sel" id="misMonthSel"></select></div>
         </div>
-
         <div class="mis-grid" id="misCards"></div>
-
-        <!-- Weekly breakdown -->
         <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;color:var(--sub);text-transform:uppercase;margin-bottom:10px">📅 Weekly Breakdown</div>
         <div class="week-grid" id="weekGrid"></div>
-
-        <!-- Section wise MIS -->
         <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1.5px;color:var(--sub);text-transform:uppercase;margin-bottom:10px">📊 Section-wise Analysis</div>
         <div class="sec-chart" id="misSectionChart"></div>
-
-        <!-- MIS Table -->
         <div class="tw-wrap">
           <div style="padding:10px 14px;background:var(--s3);border-bottom:1px solid var(--bd);font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:1.5px;color:var(--sub);text-transform:uppercase">Detailed Task Report</div>
           <div class="tw-scroll">
@@ -348,6 +439,91 @@ input,select,textarea,button{font-family:'DM Sans',sans-serif}
           </div>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ SETTINGS PANEL ═══════════════════════ -->
+<div class="settings-overlay" id="settingsOverlay">
+  <div class="settings-panel">
+    <div class="sp-header">
+      <div class="sp-title">⚙️ SETTINGS</div>
+      <button class="mclose" onclick="closeSettings()">✕</button>
+    </div>
+    <div class="sp-body">
+
+      <!-- Theme -->
+      <div class="sp-section">
+        <div class="sp-section-label">🎨 Appearance</div>
+        <div class="theme-row">
+          <div class="theme-row-label">
+            <span id="themeIconBig">🌙</span>
+            <span id="themeNameBig">Dark Mode</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="theme-indicator" id="themeIndicator">DARK</span>
+            <button class="theme-toggle" id="settingsThemeBtn" title="Toggle dark/light mode">
+              <div class="theme-icons"><span>🌙</span><span>☀️</span></div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Team / Company Name -->
+      <div class="sp-section">
+        <div class="sp-section-label">🏢 Team / Company Identity</div>
+        <div class="fg">
+          <label class="fl" style="color:var(--dim)">Company Name (Part 1)</label>
+          <input class="sp-input" id="sp-name1" placeholder="e.g. ASTORIA" maxlength="20">
+        </div>
+        <div class="fg">
+          <label class="fl" style="color:var(--dim)">Company Name (Part 2) — shown in cyan</label>
+          <input class="sp-input" id="sp-name2" placeholder="e.g. LIVING" maxlength="20">
+        </div>
+        <div class="fg">
+          <label class="fl" style="color:var(--dim)">System Subtitle</label>
+          <input class="sp-input" id="sp-subtitle" placeholder="e.g. Compliance & Accounts FMS" maxlength="50">
+        </div>
+        <div style="padding:10px 14px;background:var(--s3);border:1px solid var(--bd);border-radius:8px;margin-bottom:10px">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:8px;color:var(--dim);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">Live Preview</div>
+          <div style="font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;color:var(--text)" id="namePreview">ASTORIA <span style="color:var(--cyan)">LIVING</span></div>
+          <div style="font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--dim)" id="subtitlePreview">Compliance &amp; Accounts FMS</div>
+        </div>
+        <button class="sp-save-btn" id="saveNamesBtn">💾 Save &amp; Apply</button>
+        <button class="sp-reset" id="resetNamesBtn">↺ Reset to Default</button>
+      </div>
+
+      <!-- Team Members -->
+      <div class="sp-section">
+        <div class="sp-section-label">👥 Team Members (Assign dropdown)</div>
+        <div id="teamMembersWrap">
+          <!-- dynamically rendered -->
+        </div>
+        <button class="sp-save-btn" id="saveTeamBtn" style="margin-top:4px">💾 Save Team</button>
+      </div>
+
+      <!-- Passwords -->
+      <div class="sp-section">
+        <div class="sp-section-label">🔐 Change Passwords</div>
+        <div class="fg">
+          <label class="fl" style="color:var(--dim)">Owner / MD Password</label>
+          <input class="sp-input" id="sp-pw-owner" type="password" placeholder="••••••••">
+        </div>
+        <div class="fg">
+          <label class="fl" style="color:var(--dim)">Accounts Manager Password</label>
+          <input class="sp-input" id="sp-pw-manager" type="password" placeholder="••••••••">
+        </div>
+        <div class="fg">
+          <label class="fl" style="color:var(--dim)">Accounts Executive Password</label>
+          <input class="sp-input" id="sp-pw-executive" type="password" placeholder="••••••••">
+        </div>
+        <div class="fg">
+          <label class="fl" style="color:var(--dim)">Viewer Password</label>
+          <input class="sp-input" id="sp-pw-viewer" type="password" placeholder="••••••••">
+        </div>
+        <button class="sp-save-btn" id="savePwBtn">💾 Save Passwords</button>
+      </div>
+
     </div>
   </div>
 </div>
@@ -368,17 +544,11 @@ input,select,textarea,button{font-family:'DM Sans',sans-serif}
       </div>
       <div class="fg">
         <label class="fl">Assigned To</label>
-        <select class="fs" id="taskAssign">
-          <option value="">-- Select --</option>
-          <option>Owner / MD</option>
-          <option>Accounts Manager</option>
-          <option>Accounts Executive</option>
-          <option>CA / Consultant</option>
-        </select>
+        <select class="fs" id="taskAssign"></select>
       </div>
     </div>
     <div class="mf">
-      <button class="bd2" id="deleteTaskBtn">🗑 Delete</button>
+      <button class="bd2b" id="deleteTaskBtn">🗑 Delete</button>
       <button class="bs" onclick="closeMo('taskMo')">Cancel</button>
       <button class="bp" id="markPendingBtn" style="background:rgba(90,90,120,.3);border-color:var(--bd);color:var(--sub)">Mark Pending</button>
       <button class="bp" id="markDoneBtn">✓ Mark Done</button>
@@ -413,13 +583,7 @@ input,select,textarea,button{font-family:'DM Sans',sans-serif}
       <div class="fr2">
         <div class="fg"><label class="fl">Due Date *</label><input class="fi" type="date" id="at-due"></div>
         <div class="fg"><label class="fl">Assigned To</label>
-          <select class="fs" id="at-assign">
-            <option value="">-- Select --</option>
-            <option>Owner / MD</option>
-            <option>Accounts Manager</option>
-            <option>Accounts Executive</option>
-            <option>CA / Consultant</option>
-          </select>
+          <select class="fs" id="at-assign"></select>
         </div>
       </div>
       <div class="fg"><label class="fl">Notes</label><input class="fi" id="at-notes" placeholder="Optional notes..."></div>
@@ -451,32 +615,176 @@ function sbFetch(path,method,body){
 }
 
 // ══════════════════════════════════════
+// SETTINGS / PERSISTENCE (localStorage)
+// ══════════════════════════════════════
+var DEFAULT_SETTINGS={
+  name1:'ASTORIA',name2:'LIVING',subtitle:'Compliance & Accounts FMS',
+  theme:'dark',
+  teamMembers:['Owner / MD','Accounts Manager','Accounts Executive','CA / Consultant'],
+  passwords:{owner:'comp@owner',manager:'comp@manager',executive:'comp@executive',viewer:'comp@view'}
+};
+
+function loadSettings(){
+  try{
+    var s=localStorage.getItem('comp_settings');
+    if(s)return Object.assign({},DEFAULT_SETTINGS,JSON.parse(s));
+  }catch(e){}
+  return Object.assign({},DEFAULT_SETTINGS);
+}
+
+function saveSettings(s){
+  try{localStorage.setItem('comp_settings',JSON.stringify(s));}catch(e){}
+}
+
+var SETTINGS=loadSettings();
+
+// ══════════════════════════════════════
+// THEME
+// ══════════════════════════════════════
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme',t);
+  SETTINGS.theme=t;
+  // Update all theme indicators
+  var isDark=t==='dark';
+  var tLabel=isDark?'Dark Mode':'Light Mode';
+  var tShort=isDark?'DARK':'LIGHT';
+  var tIcon=isDark?'🌙':'☀️';
+  var el;
+  el=document.getElementById('loginThemeLabel');if(el)el.textContent=tLabel;
+  el=document.getElementById('themeIndicator');if(el)el.textContent=tShort;
+  el=document.getElementById('themeNameBig');if(el)el.textContent=tLabel;
+  el=document.getElementById('themeIconBig');if(el)el.textContent=tIcon;
+}
+
+function toggleTheme(){
+  var cur=document.documentElement.getAttribute('data-theme')||'dark';
+  applyTheme(cur==='dark'?'light':'dark');
+  saveSettings(SETTINGS);
+}
+
+// ══════════════════════════════════════
+// BRANDING
+// ══════════════════════════════════════
+function applyBranding(){
+  var n1=SETTINGS.name1||'ASTORIA';
+  var n2=SETTINGS.name2||'LIVING';
+  var sub=SETTINGS.subtitle||'Compliance & Accounts FMS';
+
+  // Topbar
+  var tb=document.getElementById('topbarName');
+  if(tb)tb.innerHTML=escH(n1)+' <span style="color:var(--cyan)">'+escH(n2)+'</span><small>'+escH(sub.toUpperCase())+'</small>';
+  var tbs=document.getElementById('topbarSub');
+  if(tbs)tbs.textContent=sub.toUpperCase();
+
+  // Login
+  var lb=document.getElementById('loginBrandName');
+  if(lb)lb.innerHTML=escH(n1)+' <span>'+escH(n2)+'</span>';
+  var ls=document.getElementById('loginBrandSub');
+  if(ls)ls.textContent=sub;
+
+  // Footer
+  var lf=document.getElementById('loginFoot');
+  if(lf)lf.textContent=n1+' '+n2+' · Compliance FMS · Confidential';
+
+  // Page title
+  document.title=n1+' '+n2+' — Compliance FMS';
+
+  // Settings preview
+  var np=document.getElementById('namePreview');
+  if(np)np.innerHTML=escH(n1)+' <span style="color:var(--cyan)">'+escH(n2)+'</span>';
+  var sp2=document.getElementById('subtitlePreview');
+  if(sp2)sp2.textContent=sub;
+}
+
+function populateSettingsInputs(){
+  var el;
+  el=document.getElementById('sp-name1');if(el)el.value=SETTINGS.name1||'';
+  el=document.getElementById('sp-name2');if(el)el.value=SETTINGS.name2||'';
+  el=document.getElementById('sp-subtitle');if(el)el.value=SETTINGS.subtitle||'';
+  el=document.getElementById('sp-pw-owner');if(el)el.value=SETTINGS.passwords.owner||'';
+  el=document.getElementById('sp-pw-manager');if(el)el.value=SETTINGS.passwords.manager||'';
+  el=document.getElementById('sp-pw-executive');if(el)el.value=SETTINGS.passwords.executive||'';
+  el=document.getElementById('sp-pw-viewer');if(el)el.value=SETTINGS.passwords.viewer||'';
+  renderTeamInputs();
+}
+
+function renderTeamInputs(){
+  var wrap=document.getElementById('teamMembersWrap');
+  if(!wrap)return;
+  var members=SETTINGS.teamMembers||[];
+  wrap.innerHTML=members.map(function(m,i){
+    return'<div style="display:flex;align-items:center;gap:6px;margin-bottom:7px">'
+      +'<input class="sp-input" style="flex:1" value="'+escH(m)+'" data-idx="'+i+'" placeholder="Member name...">'
+      +'<button onclick="removeTeamMember('+i+')" style="width:28px;height:28px;background:var(--red2);border:1px solid rgba(255,68,68,.3);border-radius:7px;color:var(--red);font-size:12px;cursor:pointer;flex-shrink:0">✕</button>'
+      +'</div>';
+  }).join('')
+  +'<button onclick="addTeamMember()" style="width:100%;padding:8px;background:var(--s3);border:1px dashed var(--bd);border-radius:8px;color:var(--cyan);font-size:11px;cursor:pointer;margin-top:4px">+ Add Member</button>';
+}
+
+function addTeamMember(){
+  SETTINGS.teamMembers.push('New Member');
+  renderTeamInputs();
+}
+
+function removeTeamMember(i){
+  SETTINGS.teamMembers.splice(i,1);
+  renderTeamInputs();
+}
+
+function getTeamFromInputs(){
+  var inputs=document.querySelectorAll('#teamMembersWrap [data-idx]');
+  var members=[];
+  inputs.forEach(function(inp){members.push(inp.value.trim()||'Member');});
+  return members;
+}
+
+function populateAssignDropdowns(){
+  var members=SETTINGS.teamMembers||[];
+  var opts='<option value="">-- Select --</option>'+members.map(function(m){return'<option>'+escH(m)+'</option>';}).join('');
+  var selectors=['taskAssign','at-assign'];
+  selectors.forEach(function(id){
+    var el=document.getElementById(id);
+    if(el){el.innerHTML=opts;}
+  });
+}
+
+// ══════════════════════════════════════
+// SETTINGS PANEL
+// ══════════════════════════════════════
+function openSettings(){
+  if(READ_ONLY.includes(currentRole)){showToast('Settings: Owner/Manager only','e');return;}
+  populateSettingsInputs();
+  applyTheme(SETTINGS.theme);
+  document.getElementById('settingsOverlay').classList.add('open');
+}
+
+function closeSettings(){
+  document.getElementById('settingsOverlay').classList.remove('open');
+}
+
+// ══════════════════════════════════════
 // CONFIG
 // ══════════════════════════════════════
-var PASSWORDS={owner:'comp@owner',manager:'comp@manager',executive:'comp@executive',viewer:'comp@view'};
 var ROLE_LABELS={owner:'👑 Owner / MD',manager:'🧾 Accounts Manager',executive:'📋 Accounts Executive',viewer:'👁️ Viewer'};
 var READ_ONLY=['viewer'];
 var MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-var currentRole=null,viewingTaskId=null,taskFilt='All',taskFiltMonth='';
+var currentRole=null,viewingTaskId=null,taskFilt='All';
 var tasks=[];
 
 // ══════════════════════════════════════
-// DEFAULT TASKS TEMPLATE
+// TASK TEMPLATES
 // ══════════════════════════════════════
 var TASK_TEMPLATES=[
-  // TDS
   {section:'TDS',name:'Verification of TDS of previous month',dayOfMonth:5,freq:'Monthly',assign:'Accounts Manager'},
   {section:'TDS',name:'Payment of TDS',dayOfMonth:7,freq:'Monthly',assign:'Accounts Manager'},
   {section:'TDS',name:'TDS Return Filing',dayOfMonth:31,freq:'Quarterly',assign:'CA / Consultant'},
   {section:'TDS',name:'TDS Certificate issuance (15 days after TDS filing)',dayOfMonth:15,freq:'Quarterly',assign:'CA / Consultant'},
-  // GST
   {section:'GST',name:'Filing of GSTR-1 (Sales Invoices)',dayOfMonth:11,freq:'Monthly',assign:'Accounts Manager'},
   {section:'GST',name:'Verify e-Way Bill compliance for showroom deliveries',dayOfMonth:11,freq:'Monthly',assign:'Accounts Executive'},
   {section:'GST',name:'GSTR-2B with purchase register — ITC matching',dayOfMonth:17,freq:'Monthly',assign:'Accounts Manager'},
   {section:'GST',name:'Filing of GSTR-3B and Tax payment',dayOfMonth:20,freq:'Monthly',assign:'Accounts Manager'},
   {section:'GST',name:'Follow up for difference in 2B and Purchase',dayOfMonth:25,freq:'Monthly',assign:'Accounts Executive'},
-  // Accounts
   {section:'Accounts',name:'Bank Reconciliation for previous month transactions',dayOfMonth:3,freq:'Monthly',assign:'Accounts Executive'},
   {section:'Accounts',name:'All Sales Booking',dayOfMonth:4,freq:'Monthly',assign:'Accounts Executive'},
   {section:'Accounts',name:'All Purchase / Invoices Booking',dayOfMonth:4,freq:'Monthly',assign:'Accounts Executive'},
@@ -490,26 +798,18 @@ var TASK_TEMPLATES=[
 function today(){return new Date().toISOString().split('T')[0];}
 function fmtDate(d){if(!d)return'—';var x=new Date(d);return x.getDate()+' '+MON[x.getMonth()]+' '+String(x.getFullYear()).slice(2);}
 function escH(t){if(!t)return'';return String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function genId(){return 'T'+Date.now()+Math.floor(Math.random()*1000);}
+function genId(){return'T'+Date.now()+Math.floor(Math.random()*1000);}
 function getYM(){var d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');}
 function ymLabel(ym){if(!ym)return'';var p=ym.split('-');return MON[parseInt(p[1])-1]+' '+p[0];}
 function daysDiff(a,b){return Math.round((new Date(b)-new Date(a))/86400000);}
-function getWeekNum(dateStr){
-  var d=new Date(dateStr);
-  var day=d.getDate();
-  return Math.ceil(day/7);
-}
+function getWeekNum(dateStr){var d=new Date(dateStr);return Math.ceil(d.getDate()/7);}
 
-// Generate due date for a given month/year + dayOfMonth
 function makeDueDate(ym,day){
-  var p=ym.split('-');
-  var yr=parseInt(p[0]),mo=parseInt(p[1]);
-  var maxDay=new Date(yr,mo,0).getDate();
-  var d=Math.min(day,maxDay);
+  var p=ym.split('-');var yr=parseInt(p[0]),mo=parseInt(p[1]);
+  var maxDay=new Date(yr,mo,0).getDate();var d=Math.min(day,maxDay);
   return yr+'-'+String(mo).padStart(2,'0')+'-'+String(d).padStart(2,'0');
 }
 
-// Generate month options (current + 5 months back + 2 forward)
 function getMonthOptions(){
   var now=new Date();var opts=[];
   for(var i=-5;i<=2;i++){
@@ -522,7 +822,7 @@ function getMonthOptions(){
 
 function populateMonthSelects(){
   var opts=getMonthOptions();var cur=getYM();
-  var html=opts.map(function(o){return'<option value="'+o.ym+'" '+(o.ym===cur?'selected':'')+'>'+o.label+'</option>';}).join('');
+  var html=opts.map(function(o){return'<option value="'+o.ym+'"'+(o.ym===cur?' selected':'')+'>'+o.label+'</option>';}).join('');
   document.getElementById('taskMonthSel').innerHTML=html;
   document.getElementById('misMonthSel').innerHTML=html;
 }
@@ -541,33 +841,10 @@ function loadData(){
       buildAll();
     })
     .catch(function(e){
-      setSS('err','Load failed');
-      console.error(e);
+      setSS('err','Load failed');console.error(e);
       if(e.message&&e.message.indexOf('does not exist')>-1){
         showToast('⚠ Table not found — run SQL in Supabase!','e');
-        console.log('%c📋 Run this SQL in Supabase SQL Editor:','color:orange;font-size:14px');
-        console.log(`
-create table if not exists comp_tasks (
-  id text primary key,
-  section text,
-  name text,
-  freq text,
-  due_date date,
-  actual_date date,
-  status text default 'Pending',
-  assigned_to text,
-  notes text,
-  month_key text,
-  is_custom boolean default false,
-  created_at timestamptz default now(),
-  updated_at timestamptz default now()
-);
-alter table comp_tasks enable row level security;
-create policy "Allow all" on comp_tasks for all using (true) with check (true);
-        `);
-      } else {
-        showToast('Load failed','e');
-      }
+      }else{showToast('Load failed','e');}
     });
 }
 
@@ -590,29 +867,19 @@ function saveTask(task,cb){
 function deleteTask_db(id,cb){
   sbFetch('/comp_tasks?id=eq.'+id,'DELETE')
     .then(function(){setSS('saved','✓ Saved');if(cb)cb();})
-    .catch(function(e){setSS('err','Error');showToast('Delete failed','e');});
+    .catch(function(){setSS('err','Error');showToast('Delete failed','e');});
 }
 
-// ══════════════════════════════════════
-// GENERATE MONTHLY TASKS
-// ══════════════════════════════════════
 function ensureMonthTasks(ym){
   var existing=tasks.filter(function(t){return t.monthKey===ym&&!t.isCustom;});
   if(existing.length>=TASK_TEMPLATES.length)return Promise.resolve();
-
   var existingNames=existing.map(function(t){return t.name;});
   var toCreate=TASK_TEMPLATES.filter(function(tp){return existingNames.indexOf(tp.name)<0;});
   if(!toCreate.length)return Promise.resolve();
-
   setSS('saving','Creating tasks...');
   var promises=toCreate.map(function(tp){
-    var task={
-      id:genId(),section:tp.section,name:tp.name,freq:tp.freq,
-      dueDate:makeDueDate(ym,tp.dayOfMonth),actualDate:'',
-      status:'Pending',assign:tp.assign,notes:'',monthKey:ym,isCustom:false
-    };
-    tasks.push(task);
-    return saveTask(task,null);
+    var task={id:genId(),section:tp.section,name:tp.name,freq:tp.freq,dueDate:makeDueDate(ym,tp.dayOfMonth),actualDate:'',status:'Pending',assign:tp.assign,notes:'',monthKey:ym,isCustom:false};
+    tasks.push(task);return saveTask(task,null);
   });
   return Promise.all(promises).then(function(){setSS('saved','✓ Ready');buildAll();});
 }
@@ -626,10 +893,7 @@ function calcStatus(task){
   if(task.dueDate===today())return'Due Today';
   return'Pending';
 }
-
-function getTasksForMonth(ym){
-  return tasks.filter(function(t){return t.monthKey===ym;});
-}
+function getTasksForMonth(ym){return tasks.filter(function(t){return t.monthKey===ym;});}
 
 // ══════════════════════════════════════
 // BUILD ALL
@@ -638,16 +902,12 @@ function buildAll(){
   var curYM=getYM();
   var selTaskYM=document.getElementById('taskMonthSel')?document.getElementById('taskMonthSel').value||curYM:curYM;
   var selMisYM=document.getElementById('misMonthSel')?document.getElementById('misMonthSel').value||curYM:curYM;
-
   document.getElementById('monthPill').textContent='📅 '+ymLabel(curYM);
-
-  // Update status dynamically
   tasks.forEach(function(t){if(!t.actualDate)t.status=calcStatus(t);});
-
   var curTasks=getTasksForMonth(curYM);
   var overdue=curTasks.filter(function(t){return calcStatus(t)==='Overdue';});
   document.getElementById('overduePill').textContent='⚠ '+overdue.length+' Overdue';
-
+  populateAssignDropdowns();
   buildDash(curYM,curTasks);
   buildTasksView(selTaskYM);
   buildMIS(selMisYM);
@@ -674,69 +934,36 @@ function buildDash(ym,curTasks){
   document.getElementById('dk5').textContent=pct+'%';
   document.getElementById('dashMonthLabel').textContent=ymLabel(ym);
 
-  // Section chart
   var sections=['TDS','GST','Accounts','Custom'];
   var sColors={'TDS':'var(--gold)','GST':'var(--cyan)','Accounts':'var(--purple)','Custom':'var(--orange)'};
   document.getElementById('sectionChart').innerHTML=sections.map(function(sec){
     var st=curTasks.filter(function(t){return t.section===sec;});
     var sd=st.filter(function(t){return t.actualDate;}).length;
     var so=st.filter(function(t){return calcStatus(t)==='Overdue';}).length;
-    var sp=st.length-sd-so;
+    var sp2=st.length-sd-so;
     var pct2=st.length>0?Math.round(sd/st.length*100):0;
     var fillW=st.length>0?Math.max(pct2,sd>0?5:0):0;
-    return'<div class="sc-row">'
-      +'<div class="sc-lbl">'+sec+'</div>'
-      +'<div class="sc-bar"><div class="sc-fill" style="width:'+fillW+'%;background:'+sColors[sec]+'">'+( pct2>15?pct2+'%':'')+'</div></div>'
-      +'<div class="sc-nums">'
-        +'<div class="sc-n" style="color:var(--green)">✓ '+sd+'</div>'
-        +'<div class="sc-n" style="color:var(--red)">⚠ '+so+'</div>'
-        +'<div class="sc-n" style="color:var(--dim)">○ '+sp+'</div>'
-      +'</div>'
-      +'</div>';
+    return'<div class="sc-row"><div class="sc-lbl">'+sec+'</div><div class="sc-bar"><div class="sc-fill" style="width:'+fillW+'%;background:'+sColors[sec]+'">'+( pct2>15?pct2+'%':'')+'</div></div><div class="sc-nums"><div class="sc-n" style="color:var(--green)">✓ '+sd+'</div><div class="sc-n" style="color:var(--red)">⚠ '+so+'</div><div class="sc-n" style="color:var(--dim)">○ '+sp2+'</div></div></div>';
   }).join('');
 
-  // Overdue list
   var odl=curTasks.filter(function(t){return calcStatus(t)==='Overdue';}).sort(function(a,b){return a.dueDate<b.dueDate?-1:1;});
   document.getElementById('overdueList').innerHTML=odl.length?odl.map(function(t){
     var dd=daysDiff(t.dueDate,today());
-    return'<div onclick="openTask(\''+t.id+'\')" style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:8px;background:rgba(255,68,68,.06);border:1px solid rgba(255,68,68,.15);margin-bottom:6px;cursor:pointer">'
-      +'<div style="width:6px;height:6px;border-radius:50%;background:var(--red);flex-shrink:0"></div>'
-      +'<div style="flex:1;min-width:0"><div style="font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(t.name)+'</div>'
-      +'<div style="font-size:9px;color:var(--dim)">'+t.section+' · Due '+fmtDate(t.dueDate)+'</div></div>'
-      +'<div style="font-size:10px;font-weight:700;color:var(--red);flex-shrink:0">'+dd+'d late</div>'
-      +'</div>';
+    return'<div onclick="openTask(\''+t.id+'\')" style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:8px;background:rgba(255,68,68,.06);border:1px solid rgba(255,68,68,.15);margin-bottom:6px;cursor:pointer"><div style="width:6px;height:6px;border-radius:50%;background:var(--red);flex-shrink:0"></div><div style="flex:1;min-width:0"><div style="font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(t.name)+'</div><div style="font-size:9px;color:var(--dim)">'+t.section+' · Due '+fmtDate(t.dueDate)+'</div></div><div style="font-size:10px;font-weight:700;color:var(--red);flex-shrink:0">'+dd+'d late</div></div>';
   }).join(''):'<div style="text-align:center;padding:20px;color:var(--dim);font-size:11px">🎉 No overdue!</div>';
 
-  // Due this week
   var now=new Date();var weekEnd=new Date(now);weekEnd.setDate(now.getDate()+7);
-  var dwl=curTasks.filter(function(t){
-    if(t.actualDate)return false;
-    var d=new Date(t.dueDate);
-    return d>=now&&d<=weekEnd;
-  }).sort(function(a,b){return a.dueDate<b.dueDate?-1:1;});
+  var dwl=curTasks.filter(function(t){if(t.actualDate)return false;var d=new Date(t.dueDate);return d>=now&&d<=weekEnd;}).sort(function(a,b){return a.dueDate<b.dueDate?-1:1;});
   document.getElementById('dueSoonList').innerHTML=dwl.length?dwl.map(function(t){
     var isToday=t.dueDate===today();
-    return'<div onclick="openTask(\''+t.id+'\')" style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:8px;background:rgba(255,184,0,.06);border:1px solid rgba(255,184,0,.15);margin-bottom:6px;cursor:pointer">'
-      +'<div style="width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0"></div>'
-      +'<div style="flex:1;min-width:0"><div style="font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(t.name)+'</div>'
-      +'<div style="font-size:9px;color:var(--dim)">'+t.section+' · '+fmtDate(t.dueDate)+'</div></div>'
-      +'<div style="font-size:10px;font-weight:700;color:'+(isToday?'var(--red)':'var(--gold)')+';flex-shrink:0">'+(isToday?'TODAY':fmtDate(t.dueDate))+'</div>'
-      +'</div>';
+    return'<div onclick="openTask(\''+t.id+'\')" style="display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:8px;background:rgba(255,184,0,.06);border:1px solid rgba(255,184,0,.15);margin-bottom:6px;cursor:pointer"><div style="width:6px;height:6px;border-radius:50%;background:var(--gold);flex-shrink:0"></div><div style="flex:1;min-width:0"><div style="font-size:11px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(t.name)+'</div><div style="font-size:9px;color:var(--dim)">'+t.section+' · '+fmtDate(t.dueDate)+'</div></div><div style="font-size:10px;font-weight:700;color:'+(isToday?'var(--red)':'var(--gold)')+';flex-shrink:0">'+(isToday?'TODAY':fmtDate(t.dueDate))+'</div></div>';
   }).join(''):'<div style="text-align:center;padding:20px;color:var(--dim);font-size:11px">✅ Nothing due!</div>';
 
-  // All tasks mini table
   document.getElementById('dashTaskBody').innerHTML=curTasks.map(function(t){
     var st=calcStatus(t);
     var spc={Done:'sp-done',Overdue:'sp-overdue',Pending:'sp-pending','Due Today':'sp-today'}[st]||'sp-pending';
     var sc={TDS:'s-tds',GST:'s-gst',Accounts:'s-acc',Custom:'s-cus'}[t.section]||'s-cus';
-    return'<tr onclick="openTask(\''+t.id+'\')">'
-      +'<td><span class="tt-section '+sc+'">'+t.section+'</span></td>'
-      +'<td style="font-size:11px;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(t.name)+'</td>'
-      +'<td style="font-family:JetBrains Mono,monospace;font-size:10px;color:var(--sub)">'+fmtDate(t.dueDate)+'</td>'
-      +'<td><span class="freq-badge '+(t.freq==='Monthly'?'fb-m':t.freq==='Quarterly'?'fb-q':'fb-a')+'">'+t.freq+'</span></td>'
-      +'<td style="font-size:10px;color:var(--dim)">'+escH(t.assign||'—')+'</td>'
-      +'<td><span class="status-pill '+spc+'">'+( st==='Done'?'✓ ':st==='Overdue'?'⚠ ':st==='Due Today'?'📅 ':'○ ')+st+'</span></td>'
-      +'</tr>';
+    return'<tr onclick="openTask(\''+t.id+'\')"><td><span class="tt-section '+sc+'">'+t.section+'</span></td><td style="font-size:11px;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(t.name)+'</td><td style="font-family:JetBrains Mono,monospace;font-size:10px;color:var(--sub)">'+fmtDate(t.dueDate)+'</td><td><span class="freq-badge '+(t.freq==='Monthly'?'fb-m':t.freq==='Quarterly'?'fb-q':'fb-a')+'">'+t.freq+'</span></td><td style="font-size:10px;color:var(--dim)">'+escH(t.assign||'—')+'</td><td><span class="status-pill '+spc+'">'+( st==='Done'?'✓ ':st==='Overdue'?'⚠ ':st==='Due Today'?'📅 ':'○ ')+st+'</span></td></tr>';
   }).join('');
 }
 
@@ -760,22 +987,11 @@ function buildTasksView(ym){
     return(t.name+t.section+t.assign).toLowerCase().indexOf(q)>-1;
   });
 
-  var isRO=READ_ONLY.includes(currentRole);
   document.getElementById('taskBody').innerHTML=data.length?data.map(function(t,i){
     var st=calcStatus(t);
     var spc={Done:'sp-done',Overdue:'sp-overdue',Pending:'sp-pending','Due Today':'sp-today'}[st]||'sp-pending';
     var sc={TDS:'s-tds',GST:'s-gst',Accounts:'s-acc',Custom:'s-cus'}[t.section]||'s-cus';
-    return'<tr onclick="openTask(\''+t.id+'\')">'
-      +'<td style="font-size:10px;color:var(--dim);font-family:JetBrains Mono,monospace">'+(i+1)+'</td>'
-      +'<td><span class="tt-section '+sc+'">'+t.section+'</span></td>'
-      +'<td style="font-size:11px;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(t.name)+'</td>'
-      +'<td><span class="freq-badge '+(t.freq==='Monthly'?'fb-m':t.freq==='Quarterly'?'fb-q':'fb-a')+'">'+t.freq+'</span></td>'
-      +'<td style="font-family:JetBrains Mono,monospace;font-size:10px;color:'+(st==='Overdue'?'var(--red)':st==='Due Today'?'var(--gold)':'var(--sub)')+'">'+fmtDate(t.dueDate)+'</td>'
-      +'<td style="font-size:10px;color:var(--sub)">'+escH(t.assign||'—')+'</td>'
-      +'<td><span class="status-pill '+spc+'">'+( st==='Done'?'✓ ':st==='Overdue'?'⚠ ':st==='Due Today'?'📅 ':'○ ')+st+'</span></td>'
-      +'<td style="font-family:JetBrains Mono,monospace;font-size:10px;color:var(--green)">'+fmtDate(t.actualDate)+'</td>'
-      +'<td style="font-size:10px;color:var(--dim);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(t.notes||'—')+'</td>'
-      +'</tr>';
+    return'<tr onclick="openTask(\''+t.id+'\')"><td style="font-size:10px;color:var(--dim);font-family:JetBrains Mono,monospace">'+(i+1)+'</td><td><span class="tt-section '+sc+'">'+t.section+'</span></td><td style="font-size:11px;max-width:280px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(t.name)+'</td><td><span class="freq-badge '+(t.freq==='Monthly'?'fb-m':t.freq==='Quarterly'?'fb-q':'fb-a')+'">'+t.freq+'</span></td><td style="font-family:JetBrains Mono,monospace;font-size:10px;color:'+(st==='Overdue'?'var(--red)':st==='Due Today'?'var(--gold)':'var(--sub)')+'">'+fmtDate(t.dueDate)+'</td><td style="font-size:10px;color:var(--sub)">'+escH(t.assign||'—')+'</td><td><span class="status-pill '+spc+'">'+( st==='Done'?'✓ ':st==='Overdue'?'⚠ ':st==='Due Today'?'📅 ':'○ ')+st+'</span></td><td style="font-family:JetBrains Mono,monospace;font-size:10px;color:var(--green)">'+fmtDate(t.actualDate)+'</td><td style="font-size:10px;color:var(--dim);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(t.notes||'—')+'</td></tr>';
   }).join(''):'<tr><td colspan="9" style="text-align:center;padding:30px;color:var(--dim);font-size:11px">No tasks found</td></tr>';
 }
 
@@ -787,7 +1003,6 @@ function buildMIS(ym){
   var total=mt.length;
   var done=mt.filter(function(t){return t.actualDate;}).length;
   var overdue=mt.filter(function(t){return calcStatus(t)==='Overdue';}).length;
-  var pending=mt.filter(function(t){return calcStatus(t)==='Pending'||calcStatus(t)==='Due Today';}).length;
   var delayed=mt.filter(function(t){return t.actualDate&&t.dueDate&&t.actualDate>t.dueDate;}).length;
 
   document.getElementById('misCards').innerHTML=[
@@ -797,7 +1012,6 @@ function buildMIS(ym){
     {c:'mc-o',l:'Delayed (Done Late)',v:delayed,s:'Done after due date'},
   ].map(function(c){return'<div class="mis-card '+c.c+'"><div class="mis-lbl">'+c.l+'</div><div class="mis-val">'+c.v+'</div><div class="mis-sub">'+c.s+'</div></div>';}).join('');
 
-  // Weekly breakdown
   var weeks={1:[],2:[],3:[],4:[],5:[]};
   mt.forEach(function(t){var w=getWeekNum(t.dueDate);if(weeks[w])weeks[w].push(t);});
   var wkLabels={1:'Week 1 (1-7)',2:'Week 2 (8-14)',3:'Week 3 (15-21)',4:'Week 4 (22-28)',5:'Week 5 (29+)'};
@@ -808,18 +1022,9 @@ function buildMIS(ym){
     var wp=wt.length-wd-wo;
     var dPct=wt.length>0?Math.round(wd/wt.length*100):0;
     var oPct=wt.length>0?Math.round(wo/wt.length*100):0;
-    return'<div class="week-card">'
-      +'<div class="wk-label">'+wkLabels[w]+'</div>'
-      +'<div style="font-family:Rajdhani,sans-serif;font-size:22px;font-weight:700;color:var(--cyan);margin-bottom:8px">'+wt.length+' <span style="font-size:12px;color:var(--dim)">tasks</span></div>'
-      +'<div class="wk-bar-wrap">'
-        +'<div class="wk-bar-row"><div class="wk-bar-lbl" style="color:var(--green)">Done</div><div class="wk-bar"><div class="wk-fill" style="width:'+dPct+'%;background:var(--green)"></div></div><div class="wk-num" style="color:var(--green)">'+wd+'</div></div>'
-        +'<div class="wk-bar-row"><div class="wk-bar-lbl" style="color:var(--red)">Overdue</div><div class="wk-bar"><div class="wk-fill" style="width:'+oPct+'%;background:var(--red)"></div></div><div class="wk-num" style="color:var(--red)">'+wo+'</div></div>'
-        +'<div class="wk-bar-row"><div class="wk-bar-lbl" style="color:var(--dim)">Pending</div><div class="wk-bar"><div class="wk-fill" style="width:'+(100-dPct-oPct)+'%;background:var(--dim)"></div></div><div class="wk-num" style="color:var(--dim)">'+wp+'</div></div>'
-      +'</div>'
-      +'</div>';
+    return'<div class="week-card"><div class="wk-label">'+wkLabels[w]+'</div><div style="font-family:Rajdhani,sans-serif;font-size:22px;font-weight:700;color:var(--cyan);margin-bottom:8px">'+wt.length+' <span style="font-size:12px;color:var(--dim)">tasks</span></div><div class="wk-bar-wrap"><div class="wk-bar-row"><div class="wk-bar-lbl" style="color:var(--green)">Done</div><div class="wk-bar"><div class="wk-fill" style="width:'+dPct+'%;background:var(--green)"></div></div><div class="wk-num" style="color:var(--green)">'+wd+'</div></div><div class="wk-bar-row"><div class="wk-bar-lbl" style="color:var(--red)">Overdue</div><div class="wk-bar"><div class="wk-fill" style="width:'+oPct+'%;background:var(--red)"></div></div><div class="wk-num" style="color:var(--red)">'+wo+'</div></div><div class="wk-bar-row"><div class="wk-bar-lbl" style="color:var(--dim)">Pending</div><div class="wk-bar"><div class="wk-fill" style="width:'+(100-dPct-oPct)+'%;background:var(--dim)"></div></div><div class="wk-num" style="color:var(--dim)">'+wp+'</div></div></div></div>';
   }).join('');
 
-  // Section analysis
   var secs=['TDS','GST','Accounts','Custom'];
   var sColors2={'TDS':'var(--gold)','GST':'var(--cyan)','Accounts':'var(--purple)','Custom':'var(--orange)'};
   document.getElementById('misSectionChart').innerHTML='<div class="sc-hdr">'+ymLabel(ym)+' — Section Performance</div>'
@@ -827,34 +1032,18 @@ function buildMIS(ym){
       var st=mt.filter(function(t){return t.section===sec;});
       var sd=st.filter(function(t){return t.actualDate;}).length;
       var so=st.filter(function(t){return calcStatus(t)==='Overdue';}).length;
-      var sp=st.length-sd-so;
+      var sp2=st.length-sd-so;
       var pct2=st.length>0?Math.round(sd/st.length*100):0;
-      return'<div class="sc-row">'
-        +'<div class="sc-lbl">'+sec+' ('+st.length+')</div>'
-        +'<div class="sc-bar"><div class="sc-fill" style="width:'+Math.max(pct2,sd>0?5:0)+'%;background:'+sColors2[sec]+'">'+( pct2>15?pct2+'%':'')+'</div></div>'
-        +'<div class="sc-nums">'
-          +'<div class="sc-n" style="color:var(--green)">✓ '+sd+'</div>'
-          +'<div class="sc-n" style="color:var(--red)">⚠ '+so+'</div>'
-          +'<div class="sc-n" style="color:var(--dim)">○ '+sp+'</div>'
-        +'</div></div>';
+      return'<div class="sc-row"><div class="sc-lbl">'+sec+' ('+st.length+')</div><div class="sc-bar"><div class="sc-fill" style="width:'+Math.max(pct2,sd>0?5:0)+'%;background:'+sColors2[sec]+'">'+( pct2>15?pct2+'%':'')+'</div></div><div class="sc-nums"><div class="sc-n" style="color:var(--green)">✓ '+sd+'</div><div class="sc-n" style="color:var(--red)">⚠ '+so+'</div><div class="sc-n" style="color:var(--dim)">○ '+sp2+'</div></div></div>';
     }).join('');
 
-  // MIS table
   document.getElementById('misBody').innerHTML=mt.length?mt.map(function(t){
     var st=calcStatus(t);
     var spc={Done:'sp-done',Overdue:'sp-overdue',Pending:'sp-pending','Due Today':'sp-today'}[st]||'sp-pending';
     var delay=t.actualDate&&t.dueDate?daysDiff(t.dueDate,t.actualDate):null;
     var delayTxt=delay===null?'—':delay<=0?'<span style="color:var(--green)">On time</span>':'<span style="color:var(--red)">+'+delay+'d</span>';
     var sc={TDS:'s-tds',GST:'s-gst',Accounts:'s-acc',Custom:'s-cus'}[t.section]||'s-cus';
-    return'<tr onclick="openTask(\''+t.id+'\')">'
-      +'<td><span class="tt-section '+sc+'">'+t.section+'</span></td>'
-      +'<td style="font-size:11px;max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(t.name)+'</td>'
-      +'<td style="font-family:JetBrains Mono,monospace;font-size:10px;color:var(--sub)">'+fmtDate(t.dueDate)+'</td>'
-      +'<td style="font-family:JetBrains Mono,monospace;font-size:10px;color:var(--green)">'+fmtDate(t.actualDate)+'</td>'
-      +'<td style="font-size:11px">'+delayTxt+'</td>'
-      +'<td><span class="status-pill '+spc+'">'+( st==='Done'?'✓ ':st==='Overdue'?'⚠ ':'○ ')+st+'</span></td>'
-      +'<td style="font-size:10px;color:var(--dim)">'+escH(t.assign||'—')+'</td>'
-      +'</tr>';
+    return'<tr onclick="openTask(\''+t.id+'\')"><td><span class="tt-section '+sc+'">'+t.section+'</span></td><td style="font-size:11px;max-width:250px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escH(t.name)+'</td><td style="font-family:JetBrains Mono,monospace;font-size:10px;color:var(--sub)">'+fmtDate(t.dueDate)+'</td><td style="font-family:JetBrains Mono,monospace;font-size:10px;color:var(--green)">'+fmtDate(t.actualDate)+'</td><td style="font-size:11px">'+delayTxt+'</td><td><span class="status-pill '+spc+'">'+( st==='Done'?'✓ ':st==='Overdue'?'⚠ ':'○ ')+st+'</span></td><td style="font-size:10px;color:var(--dim)">'+escH(t.assign||'—')+'</td></tr>';
   }).join(''):'<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--dim)">No tasks for this month</td></tr>';
 }
 
@@ -880,8 +1069,8 @@ function openTask(id){
 
   document.getElementById('taskNotes').value=t.notes||'';
   document.getElementById('taskActualDate').value=t.actualDate||today();
-  var asel=document.getElementById('taskAssign');
-  asel.value=t.assign||'';
+  populateAssignDropdowns();
+  document.getElementById('taskAssign').value=t.assign||'';
 
   var isRO=READ_ONLY.includes(currentRole);
   document.getElementById('taskNotes').disabled=isRO;
@@ -890,40 +1079,22 @@ function openTask(id){
   document.getElementById('markDoneBtn').style.display=isRO?'none':'';
   document.getElementById('markPendingBtn').style.display=isRO?'none':'';
   document.getElementById('deleteTaskBtn').style.display=(isRO||!t.isCustom)?'none':'';
-
   openMo('taskMo');
 }
 
 function saveTaskFromModal(status){
   var t=tasks.find(function(x){return x.id===viewingTaskId;});if(!t)return;
-  var notes=document.getElementById('taskNotes').value;
-  var actualDate=document.getElementById('taskActualDate').value;
-  var assign=document.getElementById('taskAssign').value;
-
-  t.notes=notes;
-  t.assign=assign;
-  if(status==='Done'){
-    t.actualDate=actualDate||today();
-    t.status='Done';
-  } else {
-    t.actualDate='';
-    t.status='Pending';
-  }
-
+  t.notes=document.getElementById('taskNotes').value;
+  t.assign=document.getElementById('taskAssign').value;
+  if(status==='Done'){t.actualDate=document.getElementById('taskActualDate').value||today();t.status='Done';}
+  else{t.actualDate='';t.status='Pending';}
   tasks=tasks.map(function(x){return x.id===viewingTaskId?t:x;});
-  saveTask(t,function(){
-    buildAll();
-    showToast(status==='Done'?'✓ Task marked Done!':'Task marked Pending','s');
-    closeMo('taskMo');
-  });
+  saveTask(t,function(){buildAll();showToast(status==='Done'?'✓ Task marked Done!':'Task marked Pending','s');closeMo('taskMo');});
 }
 
 function deleteTaskFromModal(){
   if(!confirm('Delete this custom task?'))return;
-  deleteTask_db(viewingTaskId,function(){
-    tasks=tasks.filter(function(t){return t.id!==viewingTaskId;});
-    buildAll();closeMo('taskMo');showToast('Task deleted','e');
-  });
+  deleteTask_db(viewingTaskId,function(){tasks=tasks.filter(function(t){return t.id!==viewingTaskId;});buildAll();closeMo('taskMo');showToast('Task deleted','e');});
 }
 
 // ══════════════════════════════════════
@@ -931,6 +1102,7 @@ function deleteTaskFromModal(){
 // ══════════════════════════════════════
 function openAddTask(){
   if(READ_ONLY.includes(currentRole)){showToast('View only','e');return;}
+  populateAssignDropdowns();
   document.getElementById('at-name').value='';
   document.getElementById('at-notes').value='';
   document.getElementById('at-due').value=today();
@@ -942,18 +1114,8 @@ function saveAddTask(){
   var name=document.getElementById('at-name').value.trim();
   var due=document.getElementById('at-due').value;
   if(!name||!due){showToast('Name and Due Date required','e');return;}
-
   var ym=due.substring(0,7);
-  var task={
-    id:genId(),
-    section:document.getElementById('at-section').value,
-    name:name,
-    freq:document.getElementById('at-freq').value,
-    dueDate:due,actualDate:'',status:'Pending',
-    assign:document.getElementById('at-assign').value,
-    notes:document.getElementById('at-notes').value,
-    monthKey:ym,isCustom:true
-  };
+  var task={id:genId(),section:document.getElementById('at-section').value,name:name,freq:document.getElementById('at-freq').value,dueDate:due,actualDate:'',status:'Pending',assign:document.getElementById('at-assign').value,notes:document.getElementById('at-notes').value,monthKey:ym,isCustom:true};
   tasks.push(task);
   saveTask(task,function(){buildAll();showToast('✓ Task added!','s');});
   closeMo('addTaskMo');
@@ -970,7 +1132,8 @@ function doLogin(){
   if(!pass){document.getElementById('lErr').textContent='Please enter password';return;}
   var btn=document.getElementById('enterBtn');btn.textContent='Verifying...';btn.style.opacity='.7';
   setTimeout(function(){
-    if(pass===PASSWORDS[selRole]){
+    var pw=SETTINGS.passwords[selRole]||DEFAULT_SETTINGS.passwords[selRole];
+    if(pass===pw){
       currentRole=selRole;sessionStorage.setItem('comp_role',selRole);
       btn.textContent='✓ Access Granted';btn.style.color='var(--green)';
       setTimeout(enterApp,500);
@@ -981,13 +1144,23 @@ function doLogin(){
     }
   },600);
 }
-function doLogout(){sessionStorage.removeItem('comp_role');currentRole=null;document.getElementById('appPage').classList.remove('active');document.getElementById('loginPage').classList.add('active');document.getElementById('passInput').value='';document.querySelectorAll('.l-role-btn').forEach(function(b){b.classList.remove('sel');});selRole=null;var btn=document.getElementById('enterBtn');btn.textContent='ENTER SYSTEM →';btn.style='';}
+
+function doLogout(){
+  sessionStorage.removeItem('comp_role');currentRole=null;
+  document.getElementById('appPage').classList.remove('active');
+  document.getElementById('loginPage').classList.add('active');
+  document.getElementById('passInput').value='';
+  document.querySelectorAll('.l-role-btn').forEach(function(b){b.classList.remove('sel');});
+  selRole=null;var btn=document.getElementById('enterBtn');btn.textContent='ENTER SYSTEM →';btn.style='';
+}
+
 function enterApp(){
-  document.getElementById('loginPage').classList.remove('active');document.getElementById('appPage').classList.add('active');
+  document.getElementById('loginPage').classList.remove('active');
+  document.getElementById('appPage').classList.add('active');
   document.getElementById('rolePill').textContent=ROLE_LABELS[currentRole]||currentRole;
-  if(READ_ONLY.includes(currentRole)){document.getElementById('addTaskBtn').style.display='none';document.getElementById('addRowBtn').style.display='none';}
-  populateMonthSelects();
-  loadData().then?loadData():loadData();
+  if(READ_ONLY.includes(currentRole)){document.getElementById('addTaskBtn').style.display='none';document.getElementById('addRowBtn').style.display='none';document.getElementById('settingsBtn').style.display='none';}
+  populateMonthSelects();populateAssignDropdowns();
+  loadData();
   var curYM=getYM();
   setTimeout(function(){ensureMonthTasks(curYM);},1000);
 }
@@ -1004,7 +1177,63 @@ function openMo(id){document.getElementById(id).classList.add('open');}
 function closeMo(id){document.getElementById(id).classList.remove('open');}
 function showToast(msg,type){var t=document.getElementById('toast');t.textContent=msg;t.className='toast '+(type||'s')+' show';setTimeout(function(){t.classList.remove('show');},3200);}
 
+// ══════════════════════════════════════
+// INIT
+// ══════════════════════════════════════
 window.onload=function(){
+  // Apply saved settings on load
+  SETTINGS=loadSettings();
+  applyTheme(SETTINGS.theme);
+  applyBranding();
+
+  // Theme toggles
+  ['loginThemeBtn','appThemeBtn','settingsThemeBtn'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el)el.addEventListener('click',function(){toggleTheme();applyBranding();});
+  });
+
+  // Settings panel live preview
+  ['sp-name1','sp-name2','sp-subtitle'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el)el.addEventListener('input',function(){
+      var n1=document.getElementById('sp-name1').value||'NAME';
+      var n2=document.getElementById('sp-name2').value||'COMPANY';
+      var sub=document.getElementById('sp-subtitle').value||'Subtitle';
+      document.getElementById('namePreview').innerHTML=escH(n1)+' <span style="color:var(--cyan)">'+escH(n2)+'</span>';
+      document.getElementById('subtitlePreview').textContent=sub;
+    });
+  });
+
+  document.getElementById('saveNamesBtn').addEventListener('click',function(){
+    SETTINGS.name1=(document.getElementById('sp-name1').value.trim()||'ASTORIA').toUpperCase();
+    SETTINGS.name2=(document.getElementById('sp-name2').value.trim()||'LIVING').toUpperCase();
+    SETTINGS.subtitle=document.getElementById('sp-subtitle').value.trim()||'Compliance & Accounts FMS';
+    saveSettings(SETTINGS);applyBranding();showToast('✓ Branding updated!','s');
+  });
+
+  document.getElementById('resetNamesBtn').addEventListener('click',function(){
+    SETTINGS.name1=DEFAULT_SETTINGS.name1;SETTINGS.name2=DEFAULT_SETTINGS.name2;SETTINGS.subtitle=DEFAULT_SETTINGS.subtitle;
+    saveSettings(SETTINGS);applyBranding();populateSettingsInputs();showToast('Reset to default','i');
+  });
+
+  document.getElementById('saveTeamBtn').addEventListener('click',function(){
+    SETTINGS.teamMembers=getTeamFromInputs();
+    saveSettings(SETTINGS);populateAssignDropdowns();showToast('✓ Team saved!','s');
+  });
+
+  document.getElementById('savePwBtn').addEventListener('click',function(){
+    var pw={};
+    ['owner','manager','executive','viewer'].forEach(function(r){
+      var v=document.getElementById('sp-pw-'+r).value.trim();
+      pw[r]=v||SETTINGS.passwords[r];
+    });
+    SETTINGS.passwords=pw;saveSettings(SETTINGS);showToast('✓ Passwords updated!','s');
+  });
+
+  document.getElementById('settingsBtn').addEventListener('click',openSettings);
+  document.getElementById('settingsOverlay').addEventListener('click',function(e){if(e.target===this)closeSettings();});
+
+  // App events
   document.getElementById('passInput').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
   document.getElementById('enterBtn').addEventListener('click',doLogin);
   document.getElementById('passToggle').addEventListener('click',function(){var i=document.getElementById('passInput');i.type=i.type==='password'?'text':'password';});
@@ -1029,15 +1258,16 @@ window.onload=function(){
 
   document.getElementById('taskMonthSel').addEventListener('change',function(){
     var ym=this.value;
-    ensureMonthTasks(ym).then?ensureMonthTasks(ym).then(function(){buildTasksView(ym);}):buildTasksView(ym);
+    var p=ensureMonthTasks(ym);
+    if(p&&p.then)p.then(function(){buildTasksView(ym);});else buildTasksView(ym);
   });
   document.getElementById('misMonthSel').addEventListener('change',function(){buildMIS(this.value);});
   document.getElementById('taskSrch').addEventListener('input',function(){buildTasksView(document.getElementById('taskMonthSel').value||getYM());});
-
   document.querySelectorAll('.mo').forEach(function(o){o.addEventListener('click',function(e){if(e.target===o)o.classList.remove('open');});});
 
+  // Auto-login if session stored
   var saved=sessionStorage.getItem('comp_role');
-  if(saved&&PASSWORDS[saved]){currentRole=saved;enterApp();}
+  if(saved&&SETTINGS.passwords[saved]){currentRole=saved;enterApp();}
 };
 </script>
 </body>
