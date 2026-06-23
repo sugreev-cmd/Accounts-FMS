@@ -351,6 +351,9 @@ input,select,textarea,button{font-family:'DM Sans',sans-serif}
           <div class="sec-filters">
             <div class="srch-box"><span style="color:var(--dim)">🔍</span><input id="taskSrch" placeholder="Search task..."></div>
             <select class="month-sel" id="taskMonthSel"></select>
+            <input type="date" class="month-sel" id="taskFromDate" title="From Date" placeholder="From">
+            <input type="date" class="month-sel" id="taskToDate" title="To Date" placeholder="To">
+            <select class="month-sel" id="taskDoerSel"><option value="">👥 All Doers</option></select>
             <button class="flt-btn active" data-f="All">All</button>
             <button class="flt-btn" data-f="TDS">TDS</button>
             <button class="flt-btn" data-f="GST">GST</button>
@@ -996,6 +999,7 @@ var READ_ONLY=['viewer'];
 var MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 var currentRole=null,viewingTaskId=null,taskFilt='All';
 var tasks=[];
+var filterFromDate='',filterToDate='',filterDoer='';
 
 // ══════════════════════════════════════════════════════════
 // TASK TEMPLATES
@@ -1055,6 +1059,10 @@ function populateAssignDropdowns(){
   var members=SETTINGS.teamMembers||[];
   var opts='<option value="">-- Select --</option>'+members.map(function(m){return'<option>'+escH(m.name)+'</option>';}).join('');
   ['taskAssign','at-assign'].forEach(function(id){var el=document.getElementById(id);if(el)el.innerHTML=opts;});
+  
+  // Populate Doer dropdown
+  var doerOpts='<option value="">👥 All Doers</option>'+members.map(function(m){return'<option value="'+escH(m.name)+'">'+escH(m.name)+'</option>';}).join('');
+  var doerSel=document.getElementById('taskDoerSel');if(doerSel)doerSel.innerHTML=doerOpts;
 }
 
 // ══════════════════════════════════════════════════════════
@@ -1210,17 +1218,30 @@ function buildDash(ym,curTasks){
 }
 
 // ══════════════════════════════════════════════════════════
-// TASKS VIEW
+// TASKS VIEW - WITH DATE RANGE & DOER FILTER
 // ══════════════════════════════════════════════════════════
 function buildTasksView(ym){
   var q=document.getElementById('taskSrch')?document.getElementById('taskSrch').value.toLowerCase():'';
+  filterFromDate=document.getElementById('taskFromDate')?document.getElementById('taskFromDate').value:'';
+  filterToDate=document.getElementById('taskToDate')?document.getElementById('taskToDate').value:'';
+  filterDoer=document.getElementById('taskDoerSel')?document.getElementById('taskDoerSel').value:'';
+  
   var data=getTasksForMonth(ym).filter(function(t){
     var st=calcStatus(t);
     if(taskFilt==='TDS')return t.section==='TDS';if(taskFilt==='GST')return t.section==='GST';
     if(taskFilt==='Accounts')return t.section==='Accounts';if(taskFilt==='Custom')return t.section==='Custom';
     if(taskFilt==='Overdue')return st==='Overdue';if(taskFilt==='Pending')return st==='Pending'||st==='Due Today';
     if(taskFilt==='Done')return!!t.actualDate;return true;
-  }).filter(function(t){if(!q)return true;return(t.name+t.section+t.assign).toLowerCase().indexOf(q)>-1;});
+  }).filter(function(t){
+    // Date Range filter
+    if(filterFromDate&&t.dueDate<filterFromDate)return false;
+    if(filterToDate&&t.dueDate>filterToDate)return false;
+    // Doer filter
+    if(filterDoer&&t.assign!==filterDoer)return false;
+    // Search filter
+    if(!q)return true;
+    return(t.name+t.section+t.assign).toLowerCase().indexOf(q)>-1;
+  });
 
   document.getElementById('taskBody').innerHTML=data.length?data.map(function(t,i){
     var st=calcStatus(t);var spc={Done:'sp-done',Overdue:'sp-overdue',Pending:'sp-pending','Due Today':'sp-today'}[st]||'sp-pending';
@@ -1512,6 +1533,11 @@ window.onload=function(){
   document.getElementById('markPendingBtn').addEventListener('click',function(){saveTaskFromModal('Pending');});
   document.getElementById('deleteTaskBtn').addEventListener('click',deleteTaskFromModal);
   document.getElementById('saveAddTaskBtn').addEventListener('click',saveAddTask);
+
+  // Date range and doer filter listeners
+  document.getElementById('taskFromDate').addEventListener('change',function(){buildTasksView(document.getElementById('taskMonthSel').value||getYM());});
+  document.getElementById('taskToDate').addEventListener('change',function(){buildTasksView(document.getElementById('taskMonthSel').value||getYM());});
+  document.getElementById('taskDoerSel').addEventListener('change',function(){buildTasksView(document.getElementById('taskMonthSel').value||getYM());});
 
   document.querySelectorAll('#view-tasks .flt-btn').forEach(function(btn){
     btn.addEventListener('click',function(){
