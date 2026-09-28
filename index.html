@@ -1071,9 +1071,73 @@ function populateAssignDropdowns(){
 function setSS(s,t){var d=document.getElementById('syncDot'),tx=document.getElementById('syncTxt');d.className='sync-dot '+s;tx.textContent=t;}
 function loadData(){
   setSS('saving','Loading...');
-  sbFetch('/comp_tasks?order=due_date.asc','GET')
-    .then(function(rows){tasks=(rows||[]).map(mapRow);setSS('saved','✓ Loaded');buildAll();checkAndSendOverdueEmails(tasks);checkDailyReminder(tasks);})
+  return sbFetch('/comp_tasks?order=due_date.asc','GET')
+    .then(function(rows){
+      tasks=(rows||[]).map(mapRow);
+      return removeDuplicateTasks();
+    })
+    .then(function(){
+      setSS('saved','✓ Loaded');buildAll();checkAndSendOverdueEmails(tasks);checkDailyReminder(tasks);
+      // Month tasks are created only AFTER data is loaded (earlier a 1-sec timer created them before load finished → duplicates)
+      if(!READ_ONLY.includes(currentRole))return ensureMonthTasks(getYM());
+    })
     .catch(function(e){setSS('err','Load failed');console.error(e);showToast('Load failed — check Supabase setup','e');});
+}
+
+// ══════════════════════════════════════════════════════════
+// DUPLICATE PROTECTION
+// ══════════════════════════════════════════════════════════
+function normName(n){return String(n||'').trim().replace(/\s+/g,' ').toLowerCase();}
+// Duplicate key: template tasks → same month + same name; custom tasks → same name + same due date
+function dupKey(t){
+  return t.isCustom
+    ? 'C|'+normName(t.name)+'|'+(t.dueDate||'')
+    : 'T|'+(t.monthKey||'')+'|'+normName(t.name);
+}
+// Fixed ID for auto-generated tasks, so two devices opening the app together can never create two copies
+function templateId(ym,name){
+  var h=0,s=normName(name);
+  for(var i=0;i<s.length;i++){h=((h<<5)-h+s.charCodeAt(i))|0;}
+  return 'TPL-'+ym+'-'+(h>>>0).toString(36);
+}
+function removeDuplicateTasks(){
+  var groups={},order=[];
+  tasks.forEach(function(t){var k=dupKey(t);if(!groups[k]){groups[k]=[];order.push(k);}groups[k].push(t);});
+  var keep=[],toDelete=[],toUpdate=[];
+  order.forEach(function(k){
+    var g=groups[k];
+    if(g.length===1){keep.push(g[0]);return;}
+    // Keeper: Done task first, then one with notes, then oldest
+    g.sort(function(a,b){
+      if(!!a.actualDate!==!!b.actualDate)return a.actualDate?-1:1;
+      if(!!a.notes!==!!b.notes)return a.notes?-1:1;
+      return String(a.id)<String(b.id)?-1:1;
+    });
+    var k0=g[0];
+    // Merge any notes / assignee from the extra copies so nothing is lost
+    var notes=[];g.forEach(function(t){if(t.notes&&notes.indexOf(t.notes.trim())<0)notes.push(t.notes.trim());});
+    var merged=notes.join(' | ');var changed=false;
+    if(merged!==(k0.notes||'')){k0.notes=merged;changed=true;}
+    if(!k0.assign){var a=g.find(function(t){return t.assign;});if(a){k0.assign=a.assign;changed=true;}}
+    keep.push(k0);if(changed)toUpdate.push(k0);
+    g.slice(1).forEach(function(t){toDelete.push(t.id);});
+  });
+  tasks=keep;
+  if(!toDelete.length||READ_ONLY.includes(currentRole))return Promise.resolve();
+  setSS('saving','Removing '+toDelete.length+' duplicates...');
+  var jobs=toUpdate.map(function(t){return new Promise(function(res){saveTask(t,res);});});
+  // delete in batches of 50
+  for(var i=0;i<toDelete.length;i+=50){
+    var ids=toDelete.slice(i,i+50).map(function(id){return '"'+String(id).replace(/"/g,'')+'"';}).join(',');
+    jobs.push(sbFetch('/comp_tasks?id=in.('+encodeURIComponent(ids)+')','DELETE').catch(function(e){console.error('Dup delete failed',e);}));
+  }
+  return Promise.all(jobs).then(function(){console.log('Removed '+toDelete.length+' duplicate tasks');});
+}
+// Insert only if the id does not exist yet (never overwrites an existing task)
+function createTaskIfMissing(task){
+  var row={id:task.id,section:task.section,name:task.name,freq:task.freq,due_date:task.dueDate,actual_date:null,status:task.status,assigned_to:task.assign||'',notes:task.notes||'',month_key:task.monthKey,is_custom:task.isCustom||false,updated_at:new Date().toISOString()};
+  var opts={method:'POST',headers:Object.assign({},SB_H,{'Prefer':'resolution=ignore-duplicates,return=minimal'}),body:JSON.stringify(row)};
+  return fetch(SB_URL+'/rest/v1/comp_tasks?on_conflict=id',opts).then(function(r){if(!r.ok)return r.text().then(function(t){throw new Error(t);});});
 }
 function mapRow(r){return{id:r.id,section:r.section||'',name:r.name||'',freq:r.freq||'Monthly',dueDate:r.due_date||'',actualDate:r.actual_date||'',status:r.status||'Pending',assign:r.assigned_to||'',notes:r.notes||'',monthKey:r.month_key||'',isCustom:r.is_custom||false};}
 function saveTask(task,cb){
@@ -1096,7 +1160,21 @@ function deleteTask_db(id,cb){
 // ══════════════════════════════════════════════════════════
 // GENERATE MONTHLY TASKS (with Daily support + working day logic)
 // ══════════════════════════════════════════════════════════
+var _ensuringMonth=false;
 function ensureMonthTasks(ym){
+  if(_ensuringMonth||READ_ONLY.includes(currentRole))return Promise.resolve();
+  _ensuringMonth=true;
+  // Re-read this month from the database first, in case another user just created the tasks
+  return sbFetch('/comp_tasks?month_key=eq.'+ym+'&is_custom=eq.false&select=*','GET')
+    .then(function(rows){
+      (rows||[]).map(mapRow).forEach(function(r){if(!tasks.some(function(t){return t.id===r.id;}))tasks.push(r);});
+      return removeDuplicateTasks();
+    })
+    .then(function(){return _createMissingMonthTasks(ym);})
+    .catch(function(e){console.error(e);})
+    .then(function(){_ensuringMonth=false;});
+}
+function _createMissingMonthTasks(ym){
   var existing=tasks.filter(function(t){return t.monthKey===ym&&!t.isCustom;});
   // For daily tasks: count separately
   var nonDailyTemplates=TASK_TEMPLATES.filter(function(tp){return tp.freq!=='Daily';});
@@ -1107,9 +1185,9 @@ function ensureMonthTasks(ym){
 
   // Non-daily: one per template per month
   nonDailyTemplates.forEach(function(tp){
-    if(!existingNonDaily.some(function(t){return t.name===tp.name;})){
+    if(!existingNonDaily.some(function(t){return normName(t.name)===normName(tp.name);})){
       toCreate.push({
-        id:genId(),section:tp.section,name:tp.name,freq:tp.freq,
+        id:templateId(ym,tp.name),section:tp.section,name:tp.name,freq:tp.freq,
         dueDate:makeDueDate(ym,tp.dayOfMonth),
         actualDate:'',status:'Pending',assign:tp.assign,notes:'',monthKey:ym,isCustom:false
       });
@@ -1125,9 +1203,9 @@ function ensureMonthTasks(ym){
         var dateStr=yr+'-'+String(mo).padStart(2,'0')+'-'+String(d).padStart(2,'0');
         if(!isWorkingDay(dateStr))continue;
         var taskName=tp.name+' ('+fmtDate(dateStr)+')';
-        if(!existing.some(function(t){return t.name===taskName;})){
+        if(!existing.some(function(t){return normName(t.name)===normName(taskName);})){
           toCreate.push({
-            id:genId(),section:tp.section,name:taskName,freq:'Daily',
+            id:templateId(ym,taskName),section:tp.section,name:taskName,freq:'Daily',
             dueDate:dateStr,actualDate:'',status:'Pending',assign:tp.assign,notes:'',monthKey:ym,isCustom:false
           });
         }
@@ -1137,9 +1215,13 @@ function ensureMonthTasks(ym){
 
   if(!toCreate.length)return Promise.resolve();
   setSS('saving','Creating tasks...');
-  toCreate.forEach(function(t){tasks.push(t);});
-  var promises=toCreate.map(function(t){return saveTask(t,null);});
-  return Promise.all(promises).then(function(){setSS('saved','✓ Ready');buildAll();});
+  var promises=toCreate.map(function(t){return createTaskIfMissing(t);});
+  // Reload from DB afterwards so the screen shows exactly what is stored (no local copies)
+  return Promise.all(promises)
+    .then(function(){return sbFetch('/comp_tasks?order=due_date.asc','GET');})
+    .then(function(rows){tasks=(rows||[]).map(mapRow);return removeDuplicateTasks();})
+    .then(function(){setSS('saved','✓ Ready');buildAll();})
+    .catch(function(e){setSS('err','Create failed');console.error(e);});
 }
 
 // ══════════════════════════════════════════════════════════
@@ -1361,20 +1443,27 @@ function saveAddTask(){
   var due=document.getElementById('at-due').value;
   var freq=document.getElementById('at-freq').value;
   if(!name||!due){showToast('Name and Due Date required','e');return;}
+  if(_addingTask)return; // double-click protection
   // Shift to working day
   var adjustedDue=toWorkingDay(due);
   var ym=adjustedDue.substring(0,7);
+  // Block duplicate: same task name already exists on the same due date
+  var dup=tasks.find(function(t){return normName(t.name)===normName(name)&&t.dueDate===adjustedDue;});
+  if(dup){showToast('⚠ "'+dup.name+'" already exists on '+fmtDate(adjustedDue)+' — duplicate not allowed','e');return;}
+  _addingTask=true;var sBtn=document.getElementById('saveAddTaskBtn');if(sBtn){sBtn.disabled=true;sBtn.style.opacity='.6';}
   var task={id:genId(),section:document.getElementById('at-section').value,name:name,freq:freq,
     dueDate:adjustedDue,actualDate:'',status:'Pending',
     assign:document.getElementById('at-assign').value,
     notes:document.getElementById('at-notes').value,monthKey:ym,isCustom:true};
   tasks.push(task);
+  closeMo('addTaskMo');
   saveTask(task,function(){
     buildAll();showToast('✓ Task added!','s');
     if(SETTINGS.emailNew&&task.assign)emailNewTaskAssigned(task);
   });
-  closeMo('addTaskMo');
+  setTimeout(function(){_addingTask=false;if(sBtn){sBtn.disabled=false;sBtn.style.opacity='';}},1500);
 }
+var _addingTask=false;
 
 // ══════════════════════════════════════════════════════════
 // LOGIN
@@ -1407,8 +1496,7 @@ function enterApp(){
   document.getElementById('loginPage').classList.remove('active');document.getElementById('appPage').classList.add('active');
   document.getElementById('rolePill').textContent=ROLE_LABELS[currentRole]||currentRole;
   if(READ_ONLY.includes(currentRole)){document.getElementById('addTaskBtn').style.display='none';document.getElementById('addRowBtn').style.display='none';document.getElementById('settingsBtn').style.display='none';}
-  populateMonthSelects();populateAssignDropdowns();loadData();
-  setTimeout(function(){ensureMonthTasks(getYM());},1000);
+  populateMonthSelects();populateAssignDropdowns();loadData(); // loadData() creates this month's tasks after loading
 }
 function showView(v){
   document.querySelectorAll('.view').forEach(function(e){e.classList.remove('active');});
